@@ -1,0 +1,140 @@
+clear; clc;
+
+% Specify the folder path where the simulations are located
+folderPath = 'C:\Users\administrator\Desktop\CleanExercise\CleanExercise\HighOrderLowMachResults';
+
+% Initialize cell arrays to store the data
+simulations = cell(1, 4);
+spatialOrders = [6, 8, 10, 12];
+
+for i = 1:length(spatialOrders)
+    % Get the simulation folder name based on the spatial order
+    simulationFolder = fullfile(folderPath, ['N', num2str(spatialOrders(i))]);
+
+    % Load the geometry file
+    geometryFile = fullfile(simulationFolder, 'geometry.mat');
+    geometryData = load(geometryFile);
+    
+    % Extract the required variables from the geometry data
+    coordinates = geometryData.coordinates;
+    N = geometryData.N;
+    xgrid = geometryData.xgrid;
+    ygrid = geometryData.ygrid;
+    
+    % Load the fields file
+    fieldsFile = fullfile(simulationFolder, 'fields.mat');
+    fieldsData = load(fieldsFile);
+    
+    % Extract the required variables from the fields data
+    t = fieldsData.t;
+    u = fieldsData.u;
+    v = fieldsData.v;
+    T = fieldsData.T;
+    
+    % Create a structure to store the simulation data
+    simulation = struct('N', N, 'coordinates', coordinates, 'xgrid', xgrid, 'ygrid', ygrid, ...
+                        't', t, 'u', u, 'v', v, 'T', T);
+    
+    % Store the simulation data in the cell array
+    simulations{i} = simulation;
+end
+
+% Create a structure to store the reorganized database
+database = struct('simulations', simulations, 'spatialOrders', spatialOrders);
+
+% Save the database as a .mat file with comments
+save('reorganizzed_database.mat', '-struct', 'database', '-v7.3');
+
+% Load the reorganized database
+reorganizedData = load('reorganizzed_database.mat');
+
+% Extract the simulations and spatial orders
+simulations = reorganizedData.simulations;
+spatialOrders = reorganizedData.spatialOrders;
+
+% Select the simulations for N = 6 and N = 12
+N6Simulation = simulations{1};
+N12Simulation = simulations{4};
+
+% Get the last time step indices
+lastTimeStepN6 = length(N6Simulation.t);
+lastTimeStepN12 = length(N12Simulation.t);
+
+% Extract the u, v, and T data for the last time step
+uN6 = N6Simulation.u(:, :, lastTimeStepN6);
+vN6 = N6Simulation.v(:, :, lastTimeStepN6);
+TN6 = N6Simulation.T(:, :, lastTimeStepN6);
+
+uN12 = N12Simulation.u(:, :, lastTimeStepN12);
+vN12 = N12Simulation.v(:, :, lastTimeStepN12);
+TN12 = N12Simulation.T(:, :, lastTimeStepN12);
+
+% Create high-quality 2D visualizations for u, v, and T
+figure;
+subplot(2, 3, 1);
+imagesc(uN6);
+colorbar;
+title('u (N = 6)');
+xlabel('x');
+ylabel('y');
+
+subplot(2, 3, 2);
+imagesc(vN6);
+colorbar;
+title('v (N = 6)');
+xlabel('x');
+ylabel('y');
+
+subplot(2, 3, 3);
+imagesc(TN6);
+colorbar;
+title('T (N = 6)');
+xlabel('x');
+ylabel('y');
+
+subplot(2, 3, 4);
+imagesc(uN12);
+colorbar;
+title('u (N = 12)');
+xlabel('x');
+ylabel('y');
+
+subplot(2, 3, 5);
+imagesc(vN12);
+colorbar;
+title('v (N = 12)');
+xlabel('x');
+ylabel('y');
+
+subplot(2, 3, 6);
+imagesc(TN12);
+colorbar;
+title('T (N = 12)');
+xlabel('x');
+ylabel('y');
+
+% Create high-quality 1D plots of T at x = 0 and y = 0 for each time step
+figure;
+subplot(2, 2, 1);
+plot(N6Simulation.t, TN6(1, :));
+title('T at x = 0 (N = 6)');
+xlabel('Time');
+ylabel('T');
+
+subplot(2, 2, 2);
+plot(N6Simulation.t, TN6(:, 1));
+title('T at y = 0 (N = 6)');
+xlabel('Time');
+ylabel('T');
+
+subplot(2, 2, 3);
+plot(N12Simulation.t, TN12(1, :));
+title('T at x = 0 (N = 12)');
+xlabel('Time');
+ylabel('T');
+
+subplot(2, 2, 4);
+plot(N12Simulation.t, TN12(:, 1));
+title('T at y = 0 (N = 12)');
+xlabel('Time');
+ylabel('T');
